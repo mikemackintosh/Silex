@@ -19,8 +19,8 @@ application::
 
     $app->register(new Acme\DatabaseServiceProvider());
 
-You can also provide some parameters as a second argument. These
-will be set **before** the provider is registered::
+You can also provide some parameters as a second argument. These will be set
+**after** the provider is registered, but **before** it is booted::
 
     $app->register(new Acme\DatabaseServiceProvider(), array(
         'database.dsn'      => 'mysql:host=localhost;dbname=myapp',
@@ -52,6 +52,7 @@ the ``Silex\Provider`` namespace:
 * :doc:`DoctrineServiceProvider <providers/doctrine>`
 * :doc:`MonologServiceProvider <providers/monolog>`
 * :doc:`SessionServiceProvider <providers/session>`
+* :doc:`SerializerServiceProvider <providers/serializer>`
 * :doc:`SwiftmailerServiceProvider <providers/swiftmailer>`
 * :doc:`TwigServiceProvider <providers/twig>`
 * :doc:`TranslationServiceProvider <providers/translation>`

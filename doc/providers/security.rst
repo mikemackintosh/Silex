@@ -35,6 +35,8 @@ Services
 * **security.encoder_factory**: Defines the encoding strategies for user
   passwords (default to use a digest algorithm for all users).
 
+* **security.encoder.digest**: The encoder to use by default for all users.
+
 .. note::
 
     The service provider defines many other services that are used internally
@@ -45,7 +47,9 @@ Registering
 
 .. code-block:: php
 
-    $app->register(new Silex\Provider\SecurityServiceProvider());
+    $app->register(new Silex\Provider\SecurityServiceProvider(array(
+        'security.firewalls' => // see below
+    )));
 
 .. note::
 
@@ -58,6 +62,14 @@ Registering
         "require": {
             "symfony/security": "2.1.*"
         }
+
+.. caution::
+
+    The security features are only available after the Application has been
+    booted. So, if you want to use it outside of the handling of a request,
+    don't forget to call ``boot()`` first::
+
+        $application->boot();
 
 Usage
 -----
@@ -239,12 +251,14 @@ Adding a Logout
 ~~~~~~~~~~~~~~~
 
 When using a form for authentication, you can let users log out if you add the
-``logout`` setting::
+``logout`` setting, where ``logout_path`` must match the main firewall
+pattern::
 
     $app['security.firewalls'] = array(
         'secured' => array(
+            'pattern' => '^/admin/',
             'form' => array('login_path' => '/login', 'check_path' => '/admin/login_check'),
-            'logout' => array('logout_path' => '/logout'),
+            'logout' => array('logout_path' => '/admin/logout'),
 
             // ...
         ),
@@ -294,7 +308,7 @@ You can check roles in Twig templates too:
         <a href="/secured?_switch_user=fabien">Switch to Fabien</a>
     {% endif %}
 
-You can check is a user is "fully authenticated" (not an anonymous user for
+You can check if a user is "fully authenticated" (not an anonymous user for
 instance) with the special ``IS_AUTHENTICATED_FULLY`` role:
 
 .. code-block:: jinja
@@ -304,6 +318,8 @@ instance) with the special ``IS_AUTHENTICATED_FULLY`` role:
     {% else %}
         <a href="{{ path('login') }}">Login</a>
     {% endif %}
+
+Of course you will need to define a ``login`` route for this to work.
 
 .. tip::
 
@@ -475,6 +491,23 @@ sample users::
     If you are using the Doctrine ORM, the Symfony bridge for Doctrine
     provides a user provider class that is able to load users from your
     entities.
+
+Defining a custom Encoder
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, Silex uses the ``sha512`` algorithm to encode passwords.
+Additionally, the password is encoded multiple times and converted to base64.
+You can change these defaults by overriding the ``security.encoder.digest``
+service::
+
+    use Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder;
+
+    $app['security.encoder.digest'] = $app->share(function ($app) {
+        // use the sha1 algorithm
+        // don't base64 encode the password
+        // use only 1 iteration
+        return new MessageDigestPasswordEncoder('sha1', false, 1);
+    });
 
 Defining a custom Authentication Provider
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
